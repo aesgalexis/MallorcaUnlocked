@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "engine": "orb-homography-v1",
+  "enabled": false,
+  "validated": false,
+  "reason": "Todavía no hay referencias fotográficas propias ni una evaluación de campo. Las capturas se pueden guardar pendientes, pero no desbloquean lugares.",
+  "runtime": "./vendor/opencv.js",
+  "calibration": null,
+  "thresholds": {
+    "minMatches": 28,
+    "minInliers": 22,
+    "minInlierRatio": 0.65,
+    "minCoverage": 0.12,
+    "minMargin": 0.15,
+    "ratioTest": 0.7
+  },
+  "references": []
+}
