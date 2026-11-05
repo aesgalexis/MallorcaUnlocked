@@ -17,8 +17,8 @@ function makeTexture() {
 // These synthetic textures test the real OpenCV worker, not landmark recognition accuracy.
 // They never ship as references, affect the real manifest, or appear as discoveries in the product.
 test('real ORB worker matches a transformed textured fixture and rejects an unrelated image', async ({ page }) => {
-  await page.goto('./');
-  await expect(page.locator('.coin-card')).toHaveCount(50);
+  await page.goto('./?demo=0');
+  await expect(page.locator('.coin-card')).toHaveCount(100);
   const reference = await page.evaluate(makeTexture);
   await page.route('**/recognition/test-reference.png', (route) => route.fulfill({ contentType: 'image/png', body: Buffer.from(reference, 'base64') }));
   const output = await page.evaluate(async (base64) => {
@@ -60,7 +60,7 @@ test('visual proposal needs confirmation; rejection keeps the capture pending; c
       return canvas.captureStream(10);
     };
   }, reference);
-  await page.goto('./');
+  await page.goto('./?demo=0');
   await expect(page.locator('#hero-recognition')).toContainText('Reconocimiento visual en este dispositivo');
   await page.getByRole('button', { name: 'Fotografiar un lugar', exact: true }).click();
   await page.getByRole('button', { name: 'Permitir cámara', exact: true }).click();

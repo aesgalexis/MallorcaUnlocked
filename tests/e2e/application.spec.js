@@ -13,9 +13,9 @@ test.beforeEach(async ({ page }) => {
 const backup = (discovered = true) => ({ format: 'mallorca-unlocked-collection', version: 1, exportedAt: timestamp, captures: [{ id: 'test-fixture-photo', capturedAt: timestamp, origin: 'camera', photo: { type: 'image/png', base64: png } }], discoveries: discovered ? [{ placeId: 'mallorca-0001', captureId: 'test-fixture-photo', capturedAt: timestamp, discoveredAt: timestamp }] : [] });
 
 async function ready(page) {
-  await page.goto('./');
-  await expect(page.locator('.coin-card')).toHaveCount(50);
-  await expect(page.locator('#hero-recognition')).toContainText('identificación pendiente');
+  await page.goto('./?demo=0');
+  await expect(page.locator('.coin-card')).toHaveCount(100);
+  await expect(page.locator('#hero-recognition')).toContainText('Identificación pendiente');
 }
 
 async function importBackup(page, data) {
@@ -26,7 +26,7 @@ async function importBackup(page, data) {
   await expect(page.locator('dialog[open]')).toHaveCount(0);
 }
 
-test('50 locked coins, source-only requests and desktop screenshot', async ({ page }) => {
+test('100 locked coins, source-only requests and desktop screenshot', async ({ page }) => {
   const errors = [], requests = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
@@ -35,7 +35,7 @@ test('50 locked coins, source-only requests and desktop screenshot', async ({ pa
   await ready(page);
   await expect(page.locator('.is-unlocked')).toHaveCount(0);
   await expect(page.locator('#progress-discovered')).toHaveText('0');
-  await expect(page.locator('#results-count')).toHaveText('50 de 50 lugares');
+  await expect(page.locator('#results-count')).toHaveText('100 de 100 lugares');
   expect(requests.every((url) => url.startsWith('http://127.0.0.1:4173/'))).toBeTruthy();
   expect(requests.some((url) => url.includes('/vendor/'))).toBeFalsy();
   expect(requests.some((url) => url.includes('/recognition/reference-manifest.json'))).toBeTruthy();
@@ -47,15 +47,15 @@ test('50 locked coins, source-only requests and desktop screenshot', async ({ pa
 test('search, category, municipality, rarity and empty-state reset combine correctly', async ({ page }) => {
   await ready(page);
   await page.getByRole('searchbox').fill('soller');
-  await expect(page.locator('.coin-card')).toHaveCount(3);
+  await expect(page.locator('.coin-card')).toHaveCount(7);
   await page.getByLabel('Categoría', { exact: true }).selectOption('religious');
   await expect(page.locator('.coin-card')).toHaveCount(1);
   await page.getByLabel('Municipio', { exact: true }).selectOption('Palma');
   await expect(page.getByText('No hay lugares con estos filtros.')).toBeVisible();
   await page.getByRole('button', { name: 'Quitar filtros' }).click();
-  await expect(page.locator('.coin-card')).toHaveCount(50);
+  await expect(page.locator('.coin-card')).toHaveCount(100);
   await page.getByLabel('Rareza', { exact: true }).selectOption('rare');
-  await expect(page.locator('.coin-card')).toHaveCount(11);
+  await expect(page.locator('.coin-card')).toHaveCount(2);
 });
 
 test('locked place exposes source and access notes without unlocking; keyboard focus returns', async ({ page }) => {

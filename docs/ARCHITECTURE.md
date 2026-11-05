@@ -54,3 +54,7 @@ El arranque solicita recursos solo del mismo origen. Fuentes e iconos son locale
 Se escapan los textos antes de insertarlos en HTML. Las copias solo admiten JPEG, PNG y WebP decodificables, nunca SVG. Las copias contienen fotografías personales: deben conservarse fuera de repositorios públicos.
 
 No es un sistema antifraude: el propietario puede manipular sus datos locales. Una cámara disponible tampoco prueba que sea física ni demuestra presencia en un lugar.
+
+## Edición de 100 lugares y muestra
+
+El catálogo combina los lotes inicial y adicional sin renumerar IDs. La capa de afluencia documentada calcula rareza; la interfaz aplica el color solo en hover/foco o visita. Los módulos de muestra y de iconos son independientes del almacenamiento. Las tres visitas de muestra solo proyectan estado visual: una fotografía personal prevalece y la exportación sigue leyendo exclusivamente IndexedDB. El rediseño separa los estilos del álbum y de los diálogos para conservar cámara, copias y persistencia.

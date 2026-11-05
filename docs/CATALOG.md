@@ -1,31 +1,22 @@
-# Catálogo inicial de Mallorca
+# Catálogo de Mallorca: lote inicial
 
-Edición de 50 lugares; consulta documental realizada el **5 de noviembre de 2026**. El objetivo de 300–400 queda pendiente de ampliación documentada. Los 50 registros son lugares reales, sin casillas de relleno, referencias fotográficas simuladas ni identificaciones entrenadas.
+Primer lote de 50 lugares. La edición actual reúne 100 lugares y 31 municipios: véase [la ampliación](CATALOG-EXPANSION.md); consulta documental realizada el **5 de noviembre de 2026**. El objetivo de 300–400 queda pendiente de ampliación documentada. Los 50 registros son lugares reales, sin casillas de relleno, referencias fotográficas simuladas ni identificaciones entrenadas.
 
 ## Qué contiene cada ficha
 
-El archivo `src/data/catalog.js` exporta categorías, rarezas, fuentes y lugares. Cada lugar tiene un ID estable (`mallorca-0001` a `mallorca-0050`), número, nombre, municipio, categoría, rareza editorial, icono, descripción breve, notas de acceso, razón de rareza, indicios visuales y las claves de sus fuentes. Los números son permanentes: una ampliación añade números, nunca reasigna los existentes.
+El archivo `src/data/catalog.js` exporta categorías, rarezas, fuentes y lugares. El lote inicial conserva un ID estable por lugar (`mallorca-0001` a `mallorca-0050`), número, nombre, municipio, categoría, rareza calculada por visitas, icono, descripción breve, notas de acceso, razón de rareza, indicios visuales y las claves de sus fuentes. Los números son permanentes: una ampliación añade números, nunca reasigna los existentes.
 
 `sourceIds` enlaza cada ficha con fuentes primarias: oficinas municipales de turismo, ayuntamientos, el Consell de Mallorca, el portal turístico oficial de las Illes Balears o el propio gestor del lugar. `sources` conserva el título, la URL exacta y `checkedAt`. Las descripciones están redactadas para este proyecto; no se reproducen textos ni fotografías de terceros.
 
 Se han contrastado nombres, municipios y rasgos generales mediante navegación web. La comprobación documental no equivale a visita de campo ni garantiza que una página institucional esté actualizada. No se incorporan tarifas ni horarios que puedan caducar. Las notas de acceso separan el exterior observable de los interiores sujetos a entrada, permiso u horario.
 
-## Rareza: criterio editorial reproducible
+## Rareza por afluencia
 
-La rareza describe el esfuerzo o la condición de acceso al **elemento que se pretende fotografiar**. No representa importancia histórica, popularidad ni afluencia: no se dispone de una serie comparable de visitantes.
-
-| Rareza | Regla usada | Ejemplos |
-| --- | --- | --- |
-| Común | Fachada, escultura o conjunto observable desde el entorno urbano | La Seu, Banc de Sóller, Molí des Fraret |
-| Poco común | Desplazamiento específico fuera del centro o aproximación a pie con desnivel | Bellver, Lluc, El Calvari |
-| Rara | Recinto regulado para observar el elemento, o ascenso de montaña a pie | Banys Àrabs, Ses Païsses, Castell d’Alaró |
-| Épica | Reservada para incorporaciones con acceso extraordinariamente condicionado, sustentado por su fuente | Sin asignaciones en esta edición |
-
-La ficha contiene el motivo individual para que pueda revisarse. Una fachada urbana sigue siendo común aunque el interior sea de pago. Una cueva cuenta como rara porque su elemento identificable está dentro del recinto. La Casa de Robert Graves se considera rara porque la casa y su jardín forman un recinto de visita: no se presupone una vista pública desde el exterior. Estos criterios son una propuesta de producto, no una clasificación oficial ni una evaluación de accesibilidad universal.
+La clasificación anterior por acceso ha sido sustituida por visitas anuales documentadas. Menos visitas implican mayor rareza; sin cifras comparables, el lugar queda sin clasificar. Consulta [metodología, umbrales y fuentes](RARITY.md). Las notas de acceso siguen describiendo la visita, sin determinar rareza.
 
 ## Precisión y límites
 
-- Se representan **20 municipios** y nueve categorías. No se pretende una cobertura estadística equilibrada: Palma y los monumentos arquitectónicos tienen mayor representación en este primer lote.
+- En este primer lote se representan **20 municipios** y nueve categorías. No se pretende una cobertura estadística equilibrada: Palma y los monumentos arquitectónicos tienen mayor representación en este primer lote.
 - El Torrent de Pareis corresponde a su **desembocadura en Sa Calobra**. La ficha no invita a descender el barranco.
 - El nombre tradicional **Pont Romà** no demuestra un origen romano: la fuente municipal señala que su datación es incierta, y la descripción lo mantiene explícito.
 - Las murallas de Alcúdia constituyen una sola ficha; no se han duplicado sus puertas para aumentar el número de monedas.

@@ -17,7 +17,7 @@ for (const directory of ['src', 'scripts', 'tests']) for (const filename of awai
   const result = spawnSync(process.execPath, ['--check', filename], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
 }
-assert.equal(places.length, 50);
+assert.equal(places.length, 100);
 assert.equal(new Set(places.map((place) => place.id)).size, places.length);
 assert.equal(new Set(places.map((place) => place.number)).size, places.length);
 for (const place of places) {

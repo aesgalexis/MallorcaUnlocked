@@ -7,4 +7,16 @@ El frontend y su lógica se escriben para Mallorca Unlocked. No hay dependencias
 - Las fuentes institucionales del catálogo se citan en [docs/CATALOG.md](docs/CATALOG.md). Son evidencia documental, no autorizaciones para reutilizar sus fotografías. Las descripciones se redactaron para el proyecto.
 - Los iconos SVG son ilustraciones simbólicas originales del proyecto; no son levantamientos arquitectónicos exactos. Se usan fuentes del sistema, sin solicitudes a Google Fonts ni otros proveedores.
 
-No se incluyen fotografías de terceros, pesos de modelos, datos de entrenamiento ni referencias visuales con licencia pendiente. Una futura incorporación de imágenes o modelos deberá registrar autoría, fuente, licencia y obligaciones de atribución antes de su distribución.
+## Fotografías de muestra
+
+Las tres fotografías sirven únicamente para las visitas simuladas solicitadas. No son capturas personales ni referencias del reconocimiento. La interfaz identifica las muestras y muestra autoría, fuente y licencia en la vista de fotografía.
+
+| Archivo local | Autoría y fuente | Licencia |
+| --- | --- | --- |
+| `assets/demo/seu.jpg` | Diotime · [Catedral de Palma.JPG](https://commons.wikimedia.org/wiki/File:Catedral_de_Palma.JPG) | Dominio público, liberado por su autor |
+| `assets/demo/bellver.jpg` | Friedrich Haag · [043 2015 06 02 Castell de Bellver.jpg](https://commons.wikimedia.org/wiki/File:043_2015_06_02_Castell_de_Bellver.jpg) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+| `assets/demo/almudaina.jpg` | Sexta · [La Almudaina - Palma de Mallorca.jpg](https://commons.wikimedia.org/wiki/File:La_Almudaina_-_Palma_de_Mallorca.jpg) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+
+Se distribuyen las versiones reducidas de Wikimedia Commons, sin retoques propios. La interfaz recorta circularmente su visualización; la vista completa conserva sus proporciones. Las fotografías CC BY-SA y cualquier adaptación visual conservan esa licencia. No se aplica esa licencia fotográfica al código del proyecto ni a las capturas privadas del usuario.
+
+No se distribuyen pesos de modelos ni referencias visuales de entrenamiento. Cualquier incorporación futura debe registrar sus derechos y atribuciones.

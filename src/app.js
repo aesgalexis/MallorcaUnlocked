@@ -1,5 +1,7 @@
 import { places, categories, rarities, sources } from './data/catalog.js';
 import { icon, landmark } from './ui/icons.js';
+import { placeIcons } from './data/place-icons.js';
+import { withDemoVisits } from './data/demo.js';
 import { filterPlaces, getProgress } from './lib/catalog.js';
 import { CollectionStore, storageError } from './lib/storage.js';
 import { createBackup, parseBackup } from './lib/backup.js';
@@ -13,7 +15,7 @@ const store = new CollectionStore();
 const recognizer = new RecognitionService(places);
 const state = {
   tab: 'collection', filters: { query: '', category: '', municipality: '', rarity: '', status: 'all' },
-  discoveries: new Map(), captures: new Map(), photoUrls: new Map(), flipped: new Set(), storageReady: false,
+  discoveries: new Map(), captures: new Map(), photoUrls: new Map(), flipped: new Set(), storageReady: false, demoEnabled: new URLSearchParams(location.search).get('demo') !== '0',
 };
 const municipalities = [...new Set(places.map((place) => place.municipality))].sort((a, b) => a.localeCompare(b, 'es'));
 let activeModal = null;
@@ -22,6 +24,10 @@ let toastTimer;
 function options(items) { return items.map(({ id, label }) => `<option value="${escape(id)}">${escape(label)}</option>`).join(''); }
 function categoryLabel(id) { return categories.find((category) => category.id === id)?.label || id; }
 function rarityLabel(id) { return rarities.find((rarity) => rarity.id === id)?.label || id; }
+
+const displayedDiscoveries = () => withDemoVisits(state.discoveries, state.demoEnabled);
+const photoUrl = (discovery) => discovery?.demo ? discovery.photoUrl : state.photoUrls.get(discovery?.captureId);
+const drawing = (place) => landmark(placeIcons[place.id] || place.icon, place.number);
 
 function shell() {
   $('#app').innerHTML = `
@@ -36,11 +42,13 @@ function shell() {
       </div>
     </header>
     <main class="page-main">
-      <section class="collection-hero" aria-labelledby="page-title">
-        <div class="hero-copy"><p class="eyebrow"><span></span> UNA ISLA. TU COLECCIÓN.</p><h1 id="page-title">Mallorca,<br><em>por descubrir.</em></h1><p class="hero-description">${places.length} lugares reales. Tus fotografías. Tus recuerdos.</p><button class="primary-button" id="open-camera">${icon('camera')}<span>Fotografiar un lugar</span>${icon('arrow', 'button-arrow')}</button><button class="recognition-hint" id="hero-recognition"><span class="status-dot amber"></span>Capturas activas · identificación pendiente</button></div>
-        <div class="progress-card" aria-label="Progreso de la colección"><div class="progress-top"><span>TU COLECCIÓN</span>${icon('sun')}</div><div class="progress-number"><strong id="progress-discovered">0</strong><span>/ ${places.length}</span></div><p>lugares descubiertos</p><div class="progress-track" role="progressbar" aria-label="Lugares descubiertos" aria-valuemin="0" aria-valuemax="${places.length}" aria-valuenow="0"><span id="progress-fill"></span></div><div class="progress-bottom"><span id="progress-message">Todo empieza con una mirada.</span><span id="progress-percent">0%</span></div><svg class="progress-decoration" viewBox="0 0 180 180" fill="none" aria-hidden="true"><circle cx="90" cy="90" r="65"/><circle cx="90" cy="90" r="79" stroke-dasharray="1 7"/><path d="M90 45v90M45 90h90M58 58l64 64m-64 0 64-64"/><circle cx="90" cy="90" r="42"/></svg></div>
+      <section class="collection-intro" aria-labelledby="page-title">
+        <div class="intro-heading"><p class="eyebrow">MALLORCA · ÁLBUM DE LUGARES</p><h1 id="page-title">Tu colección.</h1></div>
+        <div class="collection-progress" aria-label="Progreso de la colección"><div class="progress-value"><strong id="progress-discovered">0</strong><span>/ ${places.length}</span></div><span class="progress-caption">lugares descubiertos</span><div class="progress-track" role="progressbar" aria-label="Lugares descubiertos" aria-valuemin="0" aria-valuemax="${places.length}" aria-valuenow="0"><span id="progress-fill"></span></div><span id="progress-message" class="sr-only"></span><span id="progress-percent" class="sr-only"></span></div>
+        <button class="primary-button capture-button" id="open-camera">${icon('camera')}<span>Fotografiar un lugar</span><span class="button-orb">${icon('arrow')}</span></button>
       </section>
-      <div class="collection-section-heading"><div class="section-title"><h2 id="collection-title">La colección</h2><span class="count-badge">${places.length} lugares</span></div><div class="legend" aria-label="Rarezas">${rarities.map((rarity) => `<span><i class="rarity-dot rarity-${escape(rarity.id)}"></i>${escape(rarity.label)}</span>`).join('')}</div></div>
+      <div class="collection-context"><div class="demo-note" id="demo-note"><span class="status-dot"></span><span id="demo-label">3 visitas de muestra</span><button id="toggle-demo" aria-label="Ocultar visitas de muestra">Ocultar ${icon('close')}</button></div><button class="recognition-hint" id="hero-recognition">Identificación pendiente ${icon('info')}</button></div>
+      <div class="sr-only"><h2 id="collection-title">La colección</h2></div>
       <section id="collection" aria-label="Colección de lugares" tabindex="-1">
         <div class="filters-bar"><label class="search-field">${icon('search')}<span class="sr-only">Buscar un lugar o municipio</span><input id="search" type="search" placeholder="Buscar un lugar…" autocomplete="off" maxlength="100" /></label><div class="select-filters"><label class="select-field"><span class="sr-only">Categoría</span><select id="category" aria-label="Categoría"><option value="">Todas las categorías</option>${options(categories)}</select>${icon('down')}</label><label class="select-field"><span class="sr-only">Municipio</span><select id="municipality" aria-label="Municipio"><option value="">Todos los municipios</option>${municipalities.map((municipality) => `<option>${escape(municipality)}</option>`).join('')}</select>${icon('down')}</label><label class="select-field rarity-filter"><span class="sr-only">Rareza</span><select id="rarity" aria-label="Rareza"><option value="">Todas las rarezas</option>${options(rarities)}</select>${icon('down')}</label></div></div>
         <div class="collection-meta"><div class="status-filters" role="group" aria-label="Estado de la colección"><button class="text-filter is-active" data-status="all" aria-pressed="true">Todos</button><button class="text-filter" data-status="locked" aria-pressed="false">Por descubrir</button><button class="text-filter" data-status="discovered" aria-pressed="false">Descubiertos</button></div><span class="results-count" id="results-count" aria-live="polite"></span></div>
@@ -48,10 +56,15 @@ function shell() {
         <div id="empty-state" class="empty-state" hidden></div>
         <section id="pending-section" class="pending-section" aria-labelledby="pending-title" hidden><div class="section-title"><h2 id="pending-title">Capturas pendientes</h2><span class="count-badge" id="pending-count"></span></div><p class="section-note">Guardadas en este dispositivo. Aún no desbloquean una moneda.</p><div class="pending-grid" id="pending-grid"></div></section>
       </section>
-      <aside class="album-note"><span class="note-symbol">${icon('sun')}</span><div><strong>La isla se descubre a tu ritmo.</strong><p>Fotografía un lugar para convertir su moneda en un recuerdo.</p></div><span class="note-decoration" aria-hidden="true">✳</span></aside>
-      <footer class="site-footer"><span>Hecho para descubrir Mallorca.</span><div><button id="recognition-info" class="footer-link"><span class="status-dot amber"></span>Reconocimiento en preparación</button><span class="footer-divider"></span><button id="about" class="footer-link">Sobre el proyecto ${icon('arrow')}</button></div></footer>
+      <footer class="site-footer"><span>100 lugares. Una isla.</span><div><button id="rarity-info" class="footer-link">Rareza según afluencia</button><span class="footer-divider"></span><button id="recognition-info" class="footer-link"><span class="status-dot amber"></span>Reconocimiento en preparación</button><span class="footer-divider"></span><button id="about" class="footer-link">Sobre el proyecto ${icon('arrow')}</button></div></footer>
     </main><div id="toast" class="toast" role="status" hidden></div>`;
 
+  $('#toggle-demo').addEventListener('click', () => {
+    state.demoEnabled = !state.demoEnabled;
+    const url = new URL(location.href); url.searchParams.set('demo', state.demoEnabled ? '1' : '0'); history.replaceState(null, '', url);
+    state.flipped.clear(); updateProgress(); renderCollection();
+  });
+  $('#rarity-info').addEventListener('click', showRarityInfo);
   $('#settings').addEventListener('click', showSettings);
   $('#about').addEventListener('click', showAbout);
   $('#recognition-info').addEventListener('click', showRecognitionInfo);
@@ -69,7 +82,7 @@ function shell() {
     const coin = event.target.closest('[data-coin]');
     if (!coin) return;
     const place = places.find((place) => place.id === coin.dataset.coin);
-    if (!state.discoveries.has(place.id)) return showPlace(place);
+    if (!displayedDiscoveries().has(place.id)) return showPlace(place);
     if (state.flipped.has(place.id)) state.flipped.delete(place.id); else state.flipped.add(place.id);
     coin.classList.toggle('is-flipped', state.flipped.has(place.id));
     coin.setAttribute('aria-pressed', String(state.flipped.has(place.id)));
@@ -92,19 +105,23 @@ function setTab(tab) {
 }
 
 function updateProgress() {
-  const { discovered, total, percent } = getProgress(places, state.discoveries);
+  const { discovered, total, percent } = getProgress(places, displayedDiscoveries());
   $('#progress-discovered').textContent = discovered;
   $('#progress-percent').textContent = `${percent}%`;
   // Transform uses a fixed stylesheet rule plus a semantic progress element, so CSP needs no inline styles.
-  $('#progress-fill').replaceChildren(Object.assign(document.createElement('progress'), { max: total, value: discovered }));
+  const progress = Object.assign(document.createElement('progress'), { max: total, value: discovered }); progress.setAttribute('aria-hidden', 'true'); $('#progress-fill').replaceChildren(progress);
   $('.progress-track').setAttribute('aria-valuenow', discovered);
   $('#progress-message').textContent = discovered ? `${total - discovered} lugares por descubrir.` : 'Todo empieza con una mirada.';
   $('#memory-count').textContent = discovered;
+  const sampleCount = [...displayedDiscoveries().values()].filter((visit) => visit.demo).length;
+  $('#demo-label').textContent = sampleCount ? sampleCount + ' visitas de muestra' : 'Tu colección personal';
+  $('#toggle-demo').innerHTML = sampleCount ? 'Ocultar ' + icon('close') : 'Ver muestra ' + icon('arrow');
+  $('#toggle-demo').setAttribute('aria-label', sampleCount ? 'Ocultar visitas de muestra' : 'Mostrar visitas de muestra');
 }
 
 function updateView() {
   const memories = state.tab === 'memories';
-  $('#page-title').innerHTML = memories ? 'Tus lugares,<br><em>tus recuerdos.</em>' : 'Mallorca,<br><em>por descubrir.</em>';
+  $('#page-title').innerHTML = memories ? 'Tus recuerdos.' : 'Tu colección.';
   $('#collection-title').textContent = memories ? 'Mis recuerdos' : 'La colección';
   $('.status-filters').hidden = memories;
   renderCollection();
@@ -112,7 +129,7 @@ function updateView() {
 
 function renderCollection() {
   const filters = { ...state.filters, ...(state.tab === 'memories' ? { status: 'discovered' } : {}) };
-  const visible = filterPlaces(places, filters, state.discoveries);
+  const visible = filterPlaces(places, filters, displayedDiscoveries());
   $('#results-count').textContent = `${visible.length} de ${places.length} lugares`;
   document.querySelectorAll('[data-status]').forEach((button) => {
     const active = button.dataset.status === state.filters.status;
@@ -120,10 +137,10 @@ function renderCollection() {
     button.setAttribute('aria-pressed', String(active));
   });
   $('#coin-grid').innerHTML = visible.map((place) => {
-    const discovery = state.discoveries.get(place.id);
+    const discovery = displayedDiscoveries().get(place.id);
     const unlocked = Boolean(discovery);
-    const photo = discovery && state.photoUrls.get(discovery.captureId);
-    return `<article class="coin-card ${unlocked ? 'is-discovered' : 'is-locked'} rarity-${escape(place.rarity)}"><div class="coin-topline"><span class="coin-number">Nº ${String(place.number).padStart(3, '0')}</span>${unlocked ? `<button class="small-icon-button" data-details="${escape(place.id)}" aria-label="Detalles de ${escape(place.name)}">${icon('info')}</button>` : icon('lock', 'card-lock')}</div><button class="coin-button ${unlocked ? 'is-unlocked' : ''} ${state.flipped.has(place.id) ? 'is-flipped' : ''}" data-coin="${escape(place.id)}" aria-label="${escape(place.name)}. ${unlocked ? 'Descubierto. Girar moneda para ver tu fotografía' : 'Por descubrir. Ver detalles'}" ${unlocked ? `aria-pressed="${state.flipped.has(place.id)}"` : ''}><span class="coin-body"><span class="coin-face coin-front"><span class="coin-engraving">${landmark(place.icon, place.number)}</span><span class="coin-stars" aria-hidden="true">· &nbsp; M A L L O R C A &nbsp; ·</span>${unlocked ? `<span class="coin-check">${icon('check')}</span>` : ''}</span><span class="coin-face coin-back">${photo ? `<img src="${photo}" alt="Tu fotografía de ${escape(place.name)}" loading="lazy" />` : landmark(place.icon, place.number)}</span></span></button><h3>${escape(place.name)}</h3><p class="coin-municipality">${escape(place.municipality)}</p><span class="coin-rarity"><i class="rarity-dot"></i>${escape(rarityLabel(place.rarity))}</span></article>`;
+    const photo = photoUrl(discovery);
+    return `<article class="coin-card ${unlocked ? 'is-discovered' : 'is-locked'} ${discovery?.demo ? 'is-demo' : ''} rarity-${escape(place.rarity)}"><div class="coin-topline"><span class="coin-number">Nº ${String(place.number).padStart(3, '0')}</span>${unlocked ? `<button class="small-icon-button" data-details="${escape(place.id)}" aria-label="Detalles de ${escape(place.name)}">${icon('info')}</button>` : icon('lock', 'card-lock')}</div><button class="coin-button ${unlocked ? 'is-unlocked' : ''} ${state.flipped.has(place.id) ? 'is-flipped' : ''}" data-coin="${escape(place.id)}" aria-label="${escape(place.name)}. ${unlocked ? (discovery?.demo ? 'Visita de muestra. Girar moneda para ver la fotografía' : 'Descubierto. Girar moneda para ver tu fotografía') : 'Por descubrir. Ver detalles'}" ${unlocked ? `aria-pressed="${state.flipped.has(place.id)}"` : ''}><span class="coin-body"><span class="coin-face coin-front"><span class="coin-engraving">${drawing(place)}</span><span class="coin-stars" aria-hidden="true">· &nbsp; M A L L O R C A &nbsp; ·</span>${unlocked ? `<span class="coin-check">${icon('check')}</span>` : ''}</span><span class="coin-face coin-back">${photo ? `<img src="${photo}" alt="${discovery?.demo ? 'Fotografía de muestra de' : 'Tu fotografía de'} ${escape(place.name)}" loading="lazy" />` : drawing(place)}</span></span></button><h3>${escape(place.name)}</h3><p class="coin-municipality">${escape(place.municipality)}${discovery?.demo ? ' <span class="sample-marker">· muestra</span>' : ''}</p><span class="coin-rarity"><i class="rarity-dot"></i>${escape(rarityLabel(place.rarity))}</span></article>`;
   }).join('');
   const empty = $('#empty-state');
   empty.hidden = visible.length > 0;
@@ -199,16 +216,20 @@ function modal({ title, label, content, className = '', cleanup = () => {} }) {
 
 function showPlace(place) {
   if (!place) return;
-  const discovery = state.discoveries.get(place.id);
+  const discovery = displayedDiscoveries().get(place.id);
   const context = modal({ title: escape(place.name), label: `Nº ${String(place.number).padStart(3, '0')} · ${place.municipality}`, className: 'place-modal', content: `
-    <div class="place-illustration rarity-${escape(place.rarity)} ${discovery ? 'is-unlocked' : ''}">${landmark(place.icon, place.number)}</div><div class="place-tags"><span>${escape(categoryLabel(place.category))}</span><span class="rarity-${escape(place.rarity)}"><i class="rarity-dot"></i>${escape(rarityLabel(place.rarity))}</span></div><p class="place-description">${escape(place.description)}</p>
-    ${discovery ? `<div class="discovery-note">${icon('check')}<span>Tu recuerdo del ${date(discovery.capturedAt)}</span></div><button class="secondary-button full-width" id="view-photo">${icon('image')}Ver mi fotografía</button>` : `<button class="primary-button full-width" id="place-camera">${icon('camera')}Fotografiar este lugar</button>`}
-    <details class="place-details"><summary>Sobre este lugar ${icon('down')}</summary><dl><dt>Acceso y fotografía</dt><dd>${escape(place.accessNotes)}</dd><dt>Criterio de rareza</dt><dd>${escape(place.rarityReason)}</dd><dt>Rasgos visuales de referencia</dt><dd>${(place.visualHints || []).map(escape).join(' · ')}</dd></dl><p class="small-note">Ilustración simbólica de la categoría. No es una reproducción exacta del lugar.</p><div class="source-links">${place.sourceIds.map((id) => sources[id]).filter(Boolean).map((source) => `<a href="${escape(source.url)}" target="_blank" rel="noopener noreferrer">${escape(source.title)} ↗</a>`).join('')}</div></details>` });
+    <div class="place-illustration rarity-${escape(place.rarity)} ${discovery ? 'is-unlocked' : ''}">${drawing(place)}</div><div class="place-tags"><span>${escape(categoryLabel(place.category))}</span><span class="rarity-${escape(place.rarity)}"><i class="rarity-dot"></i>${escape(rarityLabel(place.rarity))}</span></div><p class="place-description">${escape(place.description)}</p>
+    ${discovery ? `<div class="discovery-note">${icon('check')}<span>${discovery.demo ? 'Visita de muestra · no es una captura tuya' : 'Tu recuerdo del ' + date(discovery.capturedAt)}</span></div><button class="secondary-button full-width" id="view-photo">${icon('image')}${discovery?.demo ? 'Ver fotografía de muestra' : 'Ver mi fotografía'}</button>` : `<button class="primary-button full-width" id="place-camera">${icon('camera')}Fotografiar este lugar</button>`}
+    <details class="place-details"><summary>Sobre este lugar ${icon('down')}</summary><dl><dt>Acceso y fotografía</dt><dd>${escape(place.accessNotes)}</dd><dt>Criterio de rareza</dt><dd>${escape(place.rarityReason)}${place.visitation ? ` <a href="${escape(place.visitation.sourceUrl)}" target="_blank" rel="noopener noreferrer">Fuente de visitas (${place.visitation.year}) ↗</a>` : ''}</dd><dt>Rasgos visuales de referencia</dt><dd>${(place.visualHints || []).map(escape).join(' · ')}</dd></dl><p class="small-note">Ilustración simbólica de la categoría. No es una reproducción exacta del lugar.</p><div class="source-links">${place.sourceIds.map((id) => sources[id]).filter(Boolean).map((source) => `<a href="${escape(source.url)}" target="_blank" rel="noopener noreferrer">${escape(source.title)} ↗</a>`).join('')}</div></details>` });
   $('#place-camera', context.dialog)?.addEventListener('click', () => { context.close(); showCamera(); });
   $('#view-photo', context.dialog)?.addEventListener('click', () => { context.close(); showPhoto(place, discovery); });
 }
 
 function showPhoto(place, discovery) {
+  if (discovery.demo) {
+    modal({ title: escape(place.name), label: 'VISITA DE MUESTRA', className: 'photo-modal', content: `<img class="original-photo" src="${discovery.photoUrl}" alt="Fotografía de muestra de ${escape(place.name)}"/><p>Esta fotografía ilustra una visita simulada. No se ha identificado con la cámara ni forma parte de tu copia personal.</p><p class="small-note"><a href="${discovery.sourceUrl}" target="_blank" rel="noopener noreferrer">${escape(discovery.credit)} · Wikimedia Commons</a> · <a href="${discovery.licenseUrl}" target="_blank" rel="noopener noreferrer">${discovery.license}</a>. Vista circular recortada por la interfaz.</p>` });
+    return;
+  }
   modal({ title: escape(place.name), label: date(discovery.capturedAt), className: 'photo-modal', content: `<img class="original-photo" src="${state.photoUrls.get(discovery.captureId)}" alt="Tu fotografía de ${escape(place.name)}"/><p class="small-note">Tu captura original, guardada únicamente en este dispositivo.</p>` });
 }
 
@@ -220,8 +241,12 @@ function showRecognitionInfo() {
   modal({ title: 'Una identificación con criterio.', label: 'RECONOCIMIENTO VISUAL', content: `<div class="notice"><span class="status-dot amber"></span><strong>En preparación</strong></div><p>La cámara y el guardado local ya funcionan. Todavía no hay un conjunto de fotografías de referencia validado para reconocer estos lugares con fiabilidad.</p><p>Por ahora, las fotos se guardan como <strong>capturas pendientes</strong>. No iluminan monedas ni aumentan tu progreso.</p><p>Cuando el reconocimiento esté validado, propondrá un lugar a partir de la imagen y te pedirá confirmación. Una coincidencia débil o ambigua se rechazará.</p><div class="privacy-note">${icon('shield')}<p>Las fotografías permanecen en tu navegador. No se utiliza GPS ni se envían imágenes a servicios externos.</p></div>` });
 }
 
+function showRarityInfo() {
+  modal({ title: 'Menos visitado, más raro.', label: 'RAREZA · AFLUENCIA DOCUMENTADA', content: `<p>La rareza se calcula con cifras anuales publicadas por los gestores. No depende de la dificultad de acceso, la importancia histórica ni tus visitas.</p><div class="rarity-key">${rarities.map((rarity) => `<p class="rarity-${rarity.id}"><i class="rarity-dot"></i><strong>${escape(rarity.label)}</strong><span>${escape(rarity.description)}</span></p>`).join('')}</div><p class="small-note">Sin una cifra comparable no asignamos rareza. Las entradas a un recinto no miden a todas las personas que fotografían su exterior. Año y fuente están disponibles en cada ficha.</p>` });
+}
+
 function showAbout() {
-  const context = modal({ title: 'Una isla que guardar.', label: 'MALLORCA UNLOCKED · MVP 0.1', content: `<p>Una colección de lugares reales de Mallorca. Fotografías un lugar, el reconocimiento propone una identificación y, al confirmarla, su moneda guarda tu recuerdo.</p><p>Esta primera edición reúne <strong>${places.length} lugares documentados</strong>. El catálogo crecerá hacia los 300–400 sin añadir lugares de relleno.</p><div class="about-steps"><span>${icon('camera')}Fotografiar</span>${icon('arrow')}<span>${icon('spark')}Descubrir</span>${icon('arrow')}<span>${icon('image')}Recordar</span></div><p>El borde de cada moneda indica su rareza según el acceso. La rareza no mide la importancia histórica.</p><p>Sin cuentas ni sincronización. Tu colección vive en este navegador: exporta una copia para conservarla o cambiar de dispositivo.</p><button class="secondary-button full-width" id="about-recognition">Estado del reconocimiento ${icon('arrow')}</button><a class="project-link" href="https://github.com/aesgalexis/MallorcaUnlocked" target="_blank" rel="noopener noreferrer">Código y documentación ↗</a>` });
+  const context = modal({ title: 'Una isla que guardar.', label: 'MALLORCA UNLOCKED · MVP 0.1', content: `<p>Una colección de lugares reales de Mallorca. Fotografías un lugar, el reconocimiento propone una identificación y, al confirmarla, su moneda guarda tu recuerdo.</p><p>Esta primera edición reúne <strong>${places.length} lugares documentados</strong>. El catálogo crecerá hacia los 300–400 sin añadir lugares de relleno.</p><div class="about-steps"><span>${icon('camera')}Fotografiar</span>${icon('arrow')}<span>${icon('spark')}Descubrir</span>${icon('arrow')}<span>${icon('image')}Recordar</span></div><p>La rareza depende de visitas anuales documentadas: a menor afluencia, mayor rareza. Sin cifras comparables, el lugar queda sin clasificar.</p><p>Sin cuentas ni sincronización. Tu colección vive en este navegador: exporta una copia para conservarla o cambiar de dispositivo.</p><button class="secondary-button full-width" id="about-recognition">Estado del reconocimiento ${icon('arrow')}</button><a class="project-link" href="https://github.com/aesgalexis/MallorcaUnlocked" target="_blank" rel="noopener noreferrer">Código y documentación ↗</a>` });
   $('#about-recognition', context.dialog).addEventListener('click', () => { context.close(); showRecognitionInfo(); });
 }
 
@@ -230,7 +255,7 @@ async function showSettings() {
   const context = modal({ title: 'Tu colección, a salvo.', label: 'AJUSTES', content: `
     <div class="settings-summary">${icon('shield')}<div><strong>Solo en este navegador</strong><p>${state.discoveries.size} lugares descubiertos · ${state.captures.size} fotografías</p></div></div><p class="small-note">Las fotos no se sincronizan. Borrar los datos del navegador o usar navegación privada puede eliminar la colección. Conserva una copia fuera del navegador.</p>
     <div class="settings-actions"><button class="settings-action" id="export-backup" ${!state.storageReady ? 'disabled' : ''}>${icon('download')}<span><strong>Exportar colección</strong><small>Un archivo con tus fotografías y fechas</small></span>${icon('chevron')}</button><label class="settings-action import-action" for="import-backup">${icon('upload')}<span><strong>Importar una copia</strong><small>Añade recuerdos sin sustituir los actuales</small></span>${icon('chevron')}<input id="import-backup" class="file-input" type="file" accept="application/json,.json" ${!state.storageReady ? 'disabled' : ''} /></label></div>
-    <div id="import-preview" class="import-preview" hidden></div><p id="backup-message" class="action-message" aria-live="polite"></p><div class="storage-status"><div><strong>Protección del almacenamiento</strong><p id="persistence-status">Consultando el navegador…</p></div><button class="secondary-button compact" id="persist-storage">Proteger</button></div><p class="small-note">Importar restaura una copia personal; no verifica de nuevo sus fotografías. Límite por copia: 200 MB.</p>` });
+    <div id="import-preview" class="import-preview" hidden></div><p id="backup-message" class="action-message" aria-live="polite"></p><div class="storage-status"><div><strong>Protección del almacenamiento</strong><p id="persistence-status">Consultando el navegador…</p></div><button class="secondary-button compact" id="persist-storage">Proteger</button></div><p class="small-note">Las visitas de muestra no se guardan ni se exportan. Importar restaura una copia personal; no verifica de nuevo sus fotografías. Límite por copia: 200 MB.</p>` });
   const message = $('#backup-message', context.dialog);
   $('#export-backup', context.dialog).addEventListener('click', async (event) => {
     const button = event.currentTarget;

@@ -2,9 +2,9 @@
 
 Una colección visual de lugares reales de Mallorca. Las monedas guardan tu fotografía en el reverso después de una identificación visual válida y tu confirmación.
 
-**MVP estático, sin cuentas ni backend.** Incluye 50 lugares documentados de 20 municipios. El objetivo de 300–400 queda pendiente de ampliación. **El reconocimiento de lugares reales todavía no está validado:** puedes tomar y guardar capturas pendientes, pero no se presentan identificaciones simuladas ni se incrementa el progreso con ellas.
+**MVP estático, sin cuentas ni backend.** Incluye 100 lugares documentados de 31 municipios. El objetivo de 300–400 queda pendiente de ampliación. **El reconocimiento de lugares reales todavía no está validado:** puedes tomar y guardar capturas pendientes, pero no se presentan identificaciones simuladas ni se incrementa el progreso con ellas.
 
-![Colección inicial de Mallorca Unlocked, sin descubrimientos de muestra](docs/preview.png)
+![Colección de 100 lugares de Mallorca Unlocked con tres visitas de muestra](docs/preview.png)
 
 ## Abrir en local
 
@@ -28,9 +28,9 @@ npm run preview
 
 ## Qué funciona realmente
 
-- Cuadrícula responsive de 50 monedas con iconos SVG originales, bordes por rareza, fichas y fuentes documentales.
+- Cuadrícula responsive de 100 monedas con iconos SVG originales, bordes por rareza, fichas y fuentes documentales.
 - Búsqueda sin distinguir tildes y filtros combinados por categoría, municipio, rareza y estado.
-- Estados apagado/iluminado, animación de desbloqueo y giro 3D para mostrar la captura personal. Una instalación nueva empieza con **cero** descubrimientos.
+- Estados apagado/iluminado, animación de desbloqueo y giro 3D para mostrar la captura personal. Se muestran tres visitas de muestra, identificadas y ocultables. La colección personal empieza con **cero** descubrimientos; las muestras no se guardan ni exportan.
 - Cámara `getUserMedia`, solo vídeo y fotos nuevas. Sin galería, micrófono ni GPS. Permisos explicados y errores recuperables.
 - Capturas JPEG del fotograma completo con fecha, guardadas como `Blob` en IndexedDB. Consulta y eliminación confirmada de capturas pendientes.
 - Copias JSON versionadas con fotografías y fechas. Importación revisable, validación previa, transacción atómica, conservación de originales y restauración sin duplicados.
@@ -40,7 +40,7 @@ npm run preview
 
 ## Qué está pendiente
 
-El ciclo «foto de monumento real → reconocimiento fiable → moneda» necesita fotografías de referencia con derechos claros y una evaluación independiente con negativos y edificios confundibles. Por ahora, guardar una foto **no desbloquea** un lugar: queda en «Mis recuerdos → Capturas pendientes». No hay modo de juego ficticio ni selección manual presentada como reconocimiento.
+El ciclo «foto de monumento real → reconocimiento fiable → moneda» necesita fotografías de referencia con derechos claros y una evaluación independiente con negativos y edificios confundibles. Por ahora, guardar una foto **no desbloquea** un lugar: queda en «Mis recuerdos → Capturas pendientes». Las tres visitas simuladas son una muestra de presentación explícita; no son identificaciones de cámara ni se incluyen en la copia personal.
 
 También quedan la ampliación documental, las pruebas de campo en Safari/iOS y Android reales, y la validación en dispositivos con poca memoria. No hay sincronización ni carga offline garantizada. El navegador puede eliminar el almacenamiento: exporta copias para conservar tus recuerdos.
 
@@ -65,11 +65,14 @@ La verificación comprueba sintaxis y catálogo, ejecuta pruebas de lógica/pers
 
 La publicación es manual para revisar el MVP antes de exponerlo. CI se ejecuta con cada push/PR sin desplegar.
 
-**El repositorio proporcionado es privado.** Pages en repositorios privados depende del plan; el plan gratuito admite Pages en repositorios públicos. Si tu plan no lo permite, tendrás que decidir hacer público el repositorio o servir `dist/` en otro alojamiento estático. No se cambia su visibilidad automáticamente. [Disponibilidad oficial](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), [configuración de Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
+**El repositorio proporcionado es privado.** Pages en repositorios privados depende del plan; el plan gratuito admite Pages en repositorios públicos. Si tu plan no lo permite, tendrás que decidir hacer público el repositorio o servir `dist/` en otro alojamiento estático. No se cambia su visibilidad automáticamente. La publicación existente desde main se mantiene; no es necesario cambiarla para esta mejora. [Disponibilidad oficial](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), [configuración de Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
 
 ## Documentación
 
-- [Catálogo, fuentes y rareza](docs/CATALOG.md)
+- [Catálogo inicial y fuentes](docs/CATALOG.md)
+- [50 lugares adicionales](docs/CATALOG-EXPANSION.md)
+- [Rareza por visitas documentadas](docs/RARITY.md)
+- [Rediseño, marcos y muestras](docs/REDESIGN.md)
 - [Arquitectura y persistencia](docs/ARCHITECTURE.md)
 - [Reconocimiento y validación pendiente](docs/RECOGNITION.md)
 - [Verificación realizada](docs/VERIFICATION.md)

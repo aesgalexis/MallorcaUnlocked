@@ -1,3 +1,7 @@
+import { extraPlaces, extraSources } from './extra-places.js';
+import { visitationEvidence } from './visitation.js';
+import { classifyRarity, rarityReason } from '../lib/rarity.js';
+
 /**
  * Mallorca Unlocked — catalogue seed, checked 2026-11-05.
  * IDs and numbers are permanent: append entries; never renumber existing places.
@@ -16,16 +20,17 @@ export const categories = [
 ];
 
 export const rarities = [
-  { id: 'common', label: 'Común', color: '#a5aea0', description: 'Exterior situado en un núcleo urbano, observable desde su entorno público.' },
-  { id: 'uncommon', label: 'Poco común', color: '#78a390', description: 'Requiere un desplazamiento específico fuera del núcleo o una aproximación a pie.' },
-  { id: 'rare', label: 'Rara', color: '#87a1b5', description: 'Requiere una subida a pie exigente, acceso regulado o entrada en un recinto para observar el elemento.' },
-  { id: 'epic', label: 'Épica', color: '#b799ba', description: 'Reservada para futuras incorporaciones con acceso especialmente condicionado y documentado. Sin lugares asignados en esta edición.' },
+  { id: 'common', label: 'Común', color: '#a2ac83', description: '250.000 visitas anuales o más.' },
+  { id: 'uncommon', label: 'Poco común', color: '#6caa95', description: 'De 50.000 a 249.999 visitas anuales.' },
+  { id: 'rare', label: 'Rara', color: '#8d9fce', description: 'De 10.000 a 49.999 visitas anuales.' },
+  { id: 'epic', label: 'Épica', color: '#b498c3', description: 'Menos de 10.000 visitas anuales.' },
+  { id: 'unranked', label: 'Sin clasificar', color: '#b2b8a9', description: 'Sin una cifra anual comparable. La ausencia de datos no implica pocas visitas.' },
 ];
 
 const checkedAt = '2026-11-05';
 const source = (title, url) => ({ title, url, checkedAt });
 
-export const sources = {
+const initialSources = {
   seu: source('Illes Balears Travel · Catedral de Mallorca', 'https://www.illesbalears.travel/es/mallorca/catedral-la-seu-catedral-de-mallorca'),
   bellver: source('Visit Palma · Guía de turismo familiar', 'https://visitpalma.com/wp-content/uploads/2025/06/guiaturfamcastellano.pdf'),
   almudaina: source('Illes Balears Travel · Palau Reial de l’Almudaina', 'https://www.illesbalears.travel/es/mallorca/edificio-singular-palau-reial-de-lalmudaina'),
@@ -96,7 +101,7 @@ function place(number, name, municipality, category, rarity, icon, description, 
   };
 }
 
-export const places = [
+const initialPlaces = [
   place(1, 'La Seu', 'Palma', 'religious', 'common', 'cathedral',
     'La catedral gótica que se alza junto al frente marítimo de Palma.',
     'Contempla el exterior desde su entorno urbano. La visita interior tiene condiciones propias.',
@@ -298,3 +303,11 @@ export const places = [
     'Obsérvalo desde la costa y puntos seguros. No requiere acceder al islote.',
     'Enclave costero que requiere una aproximación específica.', ['gran arco de roca', 'mar abierto bajo el arco'], ['pontas']),
 ];
+
+export const sources = { ...initialSources, ...extraSources };
+export const places = [...initialPlaces, ...extraPlaces].map((place) => ({
+  ...place,
+  rarity: classifyRarity(visitationEvidence[place.id]),
+  rarityReason: rarityReason(visitationEvidence[place.id]),
+  visitation: visitationEvidence[place.id] || null,
+}));
